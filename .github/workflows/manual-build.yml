@@ -1,0 +1,42 @@
+
+name: Manual Enhanced Build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout enhanced branch
+        uses: actions/checkout@v4
+        with:
+          ref: enhanced
+          submodules: recursive
+
+      - name: Setup MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+
+      - name: Configure CMake
+        run: >
+          cmake
+          -DCMAKE_C_COMPILER=clang
+          -DCMAKE_CXX_COMPILER=clang++
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          -S . -B build -G Ninja
+
+      - name: Build DLL
+        run: cmake --build build --config RelWithDebInfo --target YimMenuV2
+
+      - name: Upload DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: YimMenuV2-enhanced
+          path: build/YimMenuV2.dll
+          if-no-files-found: error
